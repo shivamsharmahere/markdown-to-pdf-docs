@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.4.1/dist/html-docx.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/puppeteer/1.20.0/puppeteer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -569,6 +570,8 @@
             </label>
             <button class="btn btn-primary" onclick="loadSample()">📝 Load Sample</button>
             <button class="btn btn-success" onclick="convertToPDF()">📄 Export PDF</button>
+            <button class="btn btn-success" onclick="convertToPDFViaWindow()">📄 PDF (Window)</button>
+            <button class="btn btn-success" onclick="convertToPDFViaBrowser()">📄 PDF (Direct)</button>
             <button class="btn btn-info" onclick="convertToDOCX()">📘 Export DOCX</button>
             <button class="btn btn-secondary" onclick="clearContent()">🗑️ Clear</button>
             <button class="btn btn-secondary" onclick="copyHTML()">📋 Copy HTML</button>
@@ -975,21 +978,18 @@ This markdown converter provides:
         // Copy HTML
         function copyHTML() {
             const html = preview.innerHTML;
-            const fullHTML = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Markdown Document</title>
-    <style>
-        ${getMarkdownCSS()}
-    </style>
-</head>
-<body>
-    <div class="markdown-body">
-        ${html}
-    </div>
-</body>
-</html>`;
+            const markdownCSS = getMarkdownCSS();
+            const fullHTML = '<!DOCTYPE html>' +
+            '<html>' +
+            '<head>' +
+                '<meta charset="UTF-8">' +
+                '<title>Markdown Document</title>' +
+                '<style>' + markdownCSS + '</style>' +
+            '</head>' +
+            '<body>' +
+                '<div class="markdown-body">' + html + '</div>' +
+            '</body>' +
+            '</html>';
             
             navigator.clipboard.writeText(fullHTML).then(() => {
                 alert('HTML copied to clipboard!');
@@ -1029,57 +1029,78 @@ This markdown converter provides:
                 // Create a clean HTML document for PDF generation
                 const htmlContent = createCleanHTMLForExport();
                 
-                // Create temporary element
+                // Create temporary element with exact styling
                 const element = document.createElement('div');
+                element.className = 'pdf-container';
                 element.innerHTML = htmlContent;
-                element.style.padding = '20px';
-                element.style.backgroundColor = 'white';
-                element.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
                 
-                // PDF options for perfect formatting
+                // Apply exact styling to match preview
+                element.style.cssText = `
+                    padding: 40px;
+                    background-color: white;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 1.6;
+                    color: #24292e;
+                    max-width: 800px;
+                    margin: 0 auto;
+                `;
+                
+                // Add to document temporarily
+                document.body.appendChild(element);
+                
+                // PDF options optimized for text-based content
                 const opt = {
-                    margin: [0.5, 0.5, 0.5, 0.5], // Top, Left, Bottom, Right in inches
+                    margin: [15, 15, 15, 15], // mm
                     filename: 'markdown-document.pdf',
                     image: { 
                         type: 'jpeg', 
-                        quality: 1.0 
+                        quality: 0.95
                     },
                     html2canvas: { 
-                        scale: 2,
+                        scale: 1,
                         useCORS: true,
                         letterRendering: true,
-                        allowTaint: true,
+                        allowTaint: false,
                         backgroundColor: '#ffffff',
-                        removeContainer: false,
+                        removeContainer: true,
                         scrollX: 0,
-                        scrollY: 0
+                        scrollY: 0,
+                        width: 800,
+                        height: window.innerHeight,
+                        onclone: function(clonedDoc) {
+                            // Apply styles to cloned document
+                            const style = clonedDoc.createElement('style');
+                            style.textContent = getPrintCSS();
+                            clonedDoc.head.appendChild(style);
+                        }
                     },
                     jsPDF: { 
-                        unit: 'in', 
+                        unit: 'mm', 
                         format: 'a4', 
                         orientation: 'portrait',
-                        putOnlyUsedFonts: true,
-                        floatPrecision: 16
+                        compress: true
                     },
                     pagebreak: { 
-                        mode: ['avoid-all', 'css', 'legacy'],
-                        before: '.page-break-before',
-                        after: '.page-break-after',
-                        avoid: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'blockquote', 'table']
+                        mode: ['avoid-all', 'css'],
+                        avoid: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'blockquote', 'table', 'img']
                     }
                 };
                 
                 // Use html2pdf for better formatting preservation
                 if (typeof html2pdf !== 'undefined') {
                     html2pdf().set(opt).from(element).save().then(() => {
+                        document.body.removeChild(element);
                         showLoading(false);
                         console.log('PDF generated successfully');
                     }).catch(error => {
                         console.error('PDF generation error:', error);
-                        fallbackPDFGeneration(); // Fallback to original method
+                        document.body.removeChild(element);
+                        fallbackPDFGeneration(); 
                     });
                 } else {
-                    fallbackPDFGeneration(); // Fallback to original method
+                    document.body.removeChild(element);
+                    fallbackPDFGeneration(); 
                 }
                 
             } catch (error) {
@@ -1088,143 +1109,242 @@ This markdown converter provides:
             }
         }
 
-        // Fallback PDF generation method
-        function fallbackPDFGeneration() {
-            console.log('Using fallback PDF generation...');
-            
-            // Create a temporary container for PDF generation
-            const tempContainer = document.createElement('div');
-            tempContainer.style.position = 'absolute';
-            tempContainer.style.left = '-9999px';
-            tempContainer.style.top = '0';
-            tempContainer.style.width = '800px';
-            tempContainer.style.background = 'white';
-            tempContainer.style.padding = '40px';
-            tempContainer.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-            tempContainer.style.fontSize = '14px';
-            tempContainer.style.lineHeight = '1.6';
-            tempContainer.style.color = '#333';
-            tempContainer.innerHTML = createCleanHTMLForExport();
-            
-            document.body.appendChild(tempContainer);
-            
-            // Better PDF generation with window.print API
-            const originalContent = document.body.innerHTML;
-            const printContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Markdown Document</title>
-                    <style>
-                        ${getPrintCSS()}
-                    </style>
-                </head>
-                <body>
-                    ${tempContainer.innerHTML}
-                </body>
-                </html>
-            `;
-            
-            // Create blob and trigger download
-            const blob = new Blob([printContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'markdown-document.html';
-            
-            // For immediate PDF, we'll use a different approach
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            
-            setTimeout(() => {
-                printWindow.print();
-                setTimeout(() => {
-                    printWindow.close();
-                    document.body.removeChild(tempContainer);
-                    showLoading(false);
-                }, 1000);
-            }, 500);
-        }
-
-        // Enhanced DOCX Conversion with proper HTML structure
-        function convertToDOCX() {
+        // Simple PDF generation via new window
+        function convertToPDFViaWindow() {
             showLoading(true);
             
             try {
-                // Create clean HTML content for DOCX
                 const htmlContent = createCleanHTMLForExport();
+                const newWindow = window.open('', '_blank');
                 
-                // Enhanced DOCX content with proper structure
-                const docxHTML = `
-                <html xmlns:o='urn:schemas-microsoft-com:office:office' 
-                      xmlns:w='urn:schemas-microsoft-com:office:word' 
-                      xmlns='http://www.w3.org/TR/REC-html40'>
-                <head>
-                    <meta charset='utf-8'>
-                    <title>Markdown Document</title>
-                    <style>
-                        ${getDOCXCSS()}
-                    </style>
-                    <!--[if gte mso 9]>
-                    <xml>
-                        <w:WordDocument>
-                            <w:View>Print</w:View>
-                            <w:Zoom>100</w:Zoom>
-                            <w:DoNotPromptForConvert/>
-                            <w:DoNotShowRevisions/>
-                            <w:DoNotPrintRevisions/>
-                            <w:DoNotShowMarkup/>
-                            <w:DoNotShowComments/>
-                            <w:DoNotShowInsertionsAndDeletions/>
-                            <w:DoNotShowPropertyChanges/>
-                        </w:WordDocument>
-                    </xml>
-                    <![endif]-->
-                </head>
-                <body>
-                    <div class="WordSection1">
-                        ${htmlContent}
-                    </div>
-                </body>
-                </html>
-                `;
+                newWindow.document.write('<!DOCTYPE html>');
+                newWindow.document.write('<html><head>');
+                newWindow.document.write('<meta charset="UTF-8">');
+                newWindow.document.write('<title>Markdown Document</title>');
+                newWindow.document.write('<style>');
+                newWindow.document.write(getPrintCSS());
+                newWindow.document.write('</style>');
+                newWindow.document.write('</head><body>');
+                newWindow.document.write('<div style="padding:20px;">');
+                newWindow.document.write('<button onclick="window.print()" style="position:fixed;top:10px;right:10px;padding:10px;background:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;z-index:1000;">🖨️ Print as PDF</button>');
+                newWindow.document.write('<div class="markdown-body">');
+                newWindow.document.write(htmlContent);
+                newWindow.document.write('</div></div></body></html>');
+                newWindow.document.close();
                 
-                // Create blob with proper MIME type for DOCX
-                const blob = new Blob(['\ufeff', docxHTML], {
-                    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                showLoading(false);
+                alert('New window opened! Click the "Print as PDF" button and choose "Save as PDF" in the print dialog.');
+                
+            } catch (error) {
+                console.error('PDF window generation error:', error);
+                showLoading(false);
+            }
+        }
+
+        // Browser-native PDF generation - Direct download
+        function convertToPDFViaBrowser() {
+            showLoading(true);
+            
+            try {
+                // Save current page state
+                const originalTitle = document.title;
+                const originalContent = document.body.innerHTML;
+                
+                // Create print-optimized content
+                const htmlContent = createCleanHTMLForExport();
+                const printCSS = getPrintCSS();
+                
+                // Replace page content temporarily for printing
+                document.title = 'Markdown Document';
+                const printStyles = '<style>' + printCSS + 
+                    '.print-content {' +
+                        'max-width: none !important;' +
+                        'margin: 0 !important;' +
+                        'padding: 20pt !important;' +
+                        'background: white !important;' +
+                    '}' +
+                    '</style>';
+                    
+                const printContent = '<div class="print-content markdown-body">' + htmlContent + '</div>';
+                document.body.innerHTML = printStyles + printContent;
+                
+                // Auto-trigger browser print dialog for PDF save
+                setTimeout(() => {
+                    // Show instruction and trigger print
+                    alert('PDF Download: A print dialog will open. Please select "Save as PDF" or "Microsoft Print to PDF" as your destination.');
+                    
+                    window.print();
+                    
+                    // Restore original content after print dialog
+                    setTimeout(() => {
+                        document.title = originalTitle;
+                        document.body.innerHTML = originalContent;
+                        
+                        // Reinitialize the app
+                        initializeApp();
+                        showLoading(false);
+                    }, 2000);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Browser PDF generation error:', error);
+                showLoading(false);
+                location.reload(); // Restore page if something goes wrong
+            }
+        }
+
+        // Create standalone HTML document for perfect printing
+        function createStandaloneHTML(content) {
+            // Simple approach to avoid parsing issues
+            alert('Opening printable page in new window...');
+            return '';  // Simplified for now
+        }
+
+        // Reinitialize app after browser print
+        function initializeApp() {
+            // Reattach event listeners
+            const markdownInput = document.getElementById('markdownInput');
+            const preview = document.getElementById('preview');
+            
+            if (markdownInput && preview) {
+                markdownInput.addEventListener('input', updatePreview);
+                markdownInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = this.selectionStart;
+                        const end = this.selectionEnd;
+                        const value = this.value;
+                        this.value = value.substring(0, start) + '    ' + value.substring(end);
+                        this.selectionStart = this.selectionEnd = start + 4;
+                        updatePreview();
+                    }
                 });
                 
-                // Alternative: Create as RTF for better compatibility
-                const rtfContent = convertHTMLToRTF(htmlContent);
-                const rtfBlob = new Blob([rtfContent], {
-                    type: 'application/rtf'
-                });
+                // Reattach file input listener
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) {
+                    fileInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                markdownInput.value = e.target.result;
+                                updatePreview();
+                            };
+                            reader.readAsText(file);
+                        }
+                    });
+                }
                 
-                // Download RTF file (better formatting preservation)
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(rtfBlob);
-                link.download = 'markdown-document.rtf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Update preview to restore content
+                updatePreview();
+            }
+        }
+
+        // Perfect PDF Generation - Creates a clean printable page
+        function generatePrintablePage() {
+            showLoading(true);
+            
+            try {
+                // Create the most accurate HTML representation
+                const htmlContent = createCleanHTMLForExport();
+                const printCSS = getPrintCSS();
                 
-                // Also provide DOCX option
-                const docxLink = document.createElement('a');
-                docxLink.href = URL.createObjectURL(blob);
-                docxLink.download = 'markdown-document.docx';
-                document.body.appendChild(docxLink);
-                docxLink.click();
-                document.body.removeChild(docxLink);
+                // Create a perfect standalone document
+                const perfectHTML = '<!DOCTYPE html>' +
+                '<html lang="en">' +
+                '<head>' +
+                    '<meta charset="UTF-8">' +
+                    '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+                    '<title>Markdown Document - Ready for PDF</title>' +
+                    '<style>' + printCSS + '</style>' +
+                    '<style>' +
+                        '@media screen {' +
+                            'body { max-width: 800px; margin: 20px auto; padding: 20px; background: #f5f5f5; }' +
+                            '.markdown-body { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }' +
+                            '.print-instructions { background: #e3f2fd; border: 1px solid #1976d2; padding: 15px; margin-bottom: 20px; border-radius: 5px; }' +
+                            '.print-button { background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; }' +
+                            '.print-button:hover { background: #1565c0; }' +
+                        '}' +
+                        '@media print {' +
+                            'body { background: white !important; margin: 0 !important; padding: 0 !important; }' +
+                            '.markdown-body { box-shadow: none !important; border-radius: 0 !important; padding: 20pt !important; margin: 0 !important; }' +
+                            '.print-instructions, .print-button { display: none !important; }' +
+                        '}' +
+                    '</style>' +
+                '</head>' +
+                '<body>' +
+                    '<div class="print-instructions">' +
+                        '<h3>📄 Ready for PDF Export</h3>' +
+                        '<p><strong>Instructions:</strong> Use Ctrl+P (Cmd+P on Mac) to open print dialog, then choose "Save as PDF" or "Microsoft Print to PDF".</p>' +
+                        '<button class="print-button" onclick="window.print()">🖨️ Print/Save as PDF</button>' +
+                        '<button class="print-button" onclick="window.close()">❌ Close</button>' +
+                    '</div>' +
+                    '<div class="markdown-body">' + htmlContent + '</div>' +
+                '</body>' +
+                '</html>';
+                
+                // Open in new window
+                const printWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
+                printWindow.document.write(perfectHTML);
+                printWindow.document.close();
+                
+                // Focus the new window
+                printWindow.focus();
                 
                 showLoading(false);
                 
+                // Show instructions to user
+                setTimeout(() => {
+                    alert('📄 Perfect PDF page opened!\n\n✅ The formatting matches your HTML preview exactly\n\n📝 Instructions:\n1. Press Ctrl+P (Cmd+P on Mac)\n2. Choose "Save as PDF" as destination\n3. Click Save\n\nThis method gives you the most accurate PDF output!');
+                }, 1000);
+                
             } catch (error) {
-                console.error('DOCX generation error:', error);
-                // Fallback to simple HTML export
-                fallbackDOCXGeneration();
+                console.error('Perfect PDF generation error:', error);
+                showLoading(false);
+                alert('Error creating printable page. Please try another PDF method.');
             }
+        }
+
+        // Fallback PDF generation method
+        function fallbackPDFGeneration() {
+            console.log('Using fallback PDF generation...');
+            alert('PDF generation: Please use Ctrl+P to print this page and select "Save as PDF"');
+            showLoading(false);
+        }
+
+        // DOCX Conversion (original working version)
+        function convertToDOCX() {
+            showLoading(true);
+            
+            // Create a simplified DOCX content
+            const content = preview.innerHTML;
+            const textContent = preview.textContent || preview.innerText || '';
+            
+            // For this demo, we'll create a simple text-based DOCX
+            // In a production environment, you'd use a proper DOCX library
+            const docxContent = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Markdown Document</title></head>
+            <body>
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    ${content}
+                </div>
+            </body>
+            </html>
+            `;
+            
+            // Create a blob and save as .doc
+            const blob = new Blob(['\ufeff', docxContent], {
+                type: 'application/msword'
+            });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'markdown-document.doc';
+            link.click();
+            
+            showLoading(false);
         }
 
         // Create clean HTML content for export
@@ -1475,16 +1595,14 @@ This markdown converter provides:
             const content = createCleanHTMLForExport();
             const textContent = preview.textContent || preview.innerText || '';
             
-            const docxContent = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Markdown Document</title></head>
-            <body>
-                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 20px;">
-                    ${content}
-                </div>
-            </body>
-            </html>
-            `;
+            const docxContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+            '<head><meta charset="utf-8"><title>Markdown Document</title></head>' +
+            '<body>' +
+                '<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 20px;">' +
+                    content +
+                '</div>' +
+            '</body>' +
+            '</html>';
             
             const blob = new Blob(['\ufeff', docxContent], {
                 type: 'application/msword'
