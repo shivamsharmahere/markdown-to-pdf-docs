@@ -8,10 +8,9 @@
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.2/docxtemplater.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.4.1/dist/html-docx.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -414,24 +413,145 @@
 
         /* Enhanced print styles for PDF */
         @media print {
-            .markdown-body {
-                font-size: 12pt;
-                line-height: 1.5;
-                color: #000;
-                background: white;
+            body {
+                margin: 0;
+                padding: 0;
+                background: white !important;
             }
             
-            .markdown-body h1 { page-break-after: avoid; }
-            .markdown-body h2 { page-break-after: avoid; }
-            .markdown-body h3 { page-break-after: avoid; }
-            .markdown-body h4 { page-break-after: avoid; }
-            .markdown-body h5 { page-break-after: avoid; }
-            .markdown-body h6 { page-break-after: avoid; }
+            .markdown-body {
+                font-size: 11pt !important;
+                line-height: 1.4 !important;
+                color: #000 !important;
+                background: white !important;
+                padding: 20pt !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                max-width: none !important;
+            }
             
-            .markdown-body pre { page-break-inside: avoid; }
-            .markdown-body blockquote { page-break-inside: avoid; }
-            .markdown-body table { page-break-inside: avoid; }
-            .markdown-body img { page-break-inside: avoid; }
+            .markdown-body h1 { 
+                page-break-after: avoid; 
+                font-size: 18pt !important;
+                margin: 12pt 0 6pt 0 !important;
+                padding-bottom: 3pt !important;
+            }
+            .markdown-body h2 { 
+                page-break-after: avoid; 
+                font-size: 15pt !important;
+                margin: 10pt 0 5pt 0 !important;
+                padding-bottom: 2pt !important;
+            }
+            .markdown-body h3 { 
+                page-break-after: avoid; 
+                font-size: 13pt !important;
+                margin: 8pt 0 4pt 0 !important;
+            }
+            .markdown-body h4 { 
+                page-break-after: avoid; 
+                font-size: 11pt !important;
+                margin: 6pt 0 3pt 0 !important;
+                font-weight: 600 !important;
+            }
+            .markdown-body h5 { 
+                page-break-after: avoid; 
+                font-size: 10pt !important;
+                margin: 5pt 0 2pt 0 !important;
+                font-weight: 600 !important;
+            }
+            .markdown-body h6 { 
+                page-break-after: avoid; 
+                font-size: 9pt !important;
+                margin: 4pt 0 2pt 0 !important;
+                font-weight: 600 !important;
+                color: #666 !important;
+            }
+            
+            .markdown-body p { 
+                margin: 0 0 6pt 0 !important;
+                orphans: 3;
+                widows: 3;
+            }
+            
+            .markdown-body pre { 
+                page-break-inside: avoid; 
+                background-color: #f8f8f8 !important;
+                border: 1pt solid #ddd !important;
+                padding: 8pt !important;
+                margin: 6pt 0 !important;
+                font-size: 9pt !important;
+                line-height: 1.3 !important;
+            }
+            
+            .markdown-body code {
+                background-color: #f0f0f0 !important;
+                padding: 1pt 2pt !important;
+                font-size: 9pt !important;
+                border-radius: 2pt !important;
+            }
+            
+            .markdown-body blockquote { 
+                page-break-inside: avoid; 
+                border-left: 3pt solid #ddd !important;
+                padding-left: 8pt !important;
+                margin: 6pt 0 6pt 0 !important;
+                color: #666 !important;
+            }
+            
+            .markdown-body table { 
+                page-break-inside: avoid;
+                border-collapse: collapse !important;
+                width: 100% !important;
+                margin: 6pt 0 !important;
+            }
+            
+            .markdown-body table th {
+                background-color: #f5f5f5 !important;
+                border: 1pt solid #ddd !important;
+                padding: 4pt 6pt !important;
+                font-weight: 600 !important;
+                font-size: 10pt !important;
+            }
+            
+            .markdown-body table td {
+                border: 1pt solid #ddd !important;
+                padding: 4pt 6pt !important;
+                font-size: 10pt !important;
+            }
+            
+            .markdown-body ul, .markdown-body ol {
+                margin: 4pt 0 4pt 0 !important;
+                padding-left: 16pt !important;
+            }
+            
+            .markdown-body li {
+                margin: 1pt 0 !important;
+                line-height: 1.3 !important;
+            }
+            
+            .markdown-body hr {
+                height: 1pt !important;
+                background-color: #ddd !important;
+                border: none !important;
+                margin: 12pt 0 !important;
+            }
+            
+            .markdown-body img { 
+                page-break-inside: avoid; 
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            
+            .markdown-body a {
+                color: #0066cc !important;
+                text-decoration: underline !important;
+            }
+            
+            /* Hide unnecessary elements in print */
+            .toolbar, .section-title, .stats {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -901,9 +1021,76 @@ This markdown converter provides:
             `;
         }
 
-        // PDF Conversion
+        // Enhanced PDF Conversion with proper HTML-to-PDF
         function convertToPDF() {
             showLoading(true);
+            
+            try {
+                // Create a clean HTML document for PDF generation
+                const htmlContent = createCleanHTMLForExport();
+                
+                // Create temporary element
+                const element = document.createElement('div');
+                element.innerHTML = htmlContent;
+                element.style.padding = '20px';
+                element.style.backgroundColor = 'white';
+                element.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+                
+                // PDF options for perfect formatting
+                const opt = {
+                    margin: [0.5, 0.5, 0.5, 0.5], // Top, Left, Bottom, Right in inches
+                    filename: 'markdown-document.pdf',
+                    image: { 
+                        type: 'jpeg', 
+                        quality: 1.0 
+                    },
+                    html2canvas: { 
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        removeContainer: false,
+                        scrollX: 0,
+                        scrollY: 0
+                    },
+                    jsPDF: { 
+                        unit: 'in', 
+                        format: 'a4', 
+                        orientation: 'portrait',
+                        putOnlyUsedFonts: true,
+                        floatPrecision: 16
+                    },
+                    pagebreak: { 
+                        mode: ['avoid-all', 'css', 'legacy'],
+                        before: '.page-break-before',
+                        after: '.page-break-after',
+                        avoid: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'blockquote', 'table']
+                    }
+                };
+                
+                // Use html2pdf for better formatting preservation
+                if (typeof html2pdf !== 'undefined') {
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        showLoading(false);
+                        console.log('PDF generated successfully');
+                    }).catch(error => {
+                        console.error('PDF generation error:', error);
+                        fallbackPDFGeneration(); // Fallback to original method
+                    });
+                } else {
+                    fallbackPDFGeneration(); // Fallback to original method
+                }
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                fallbackPDFGeneration();
+            }
+        }
+
+        // Fallback PDF generation method
+        function fallbackPDFGeneration() {
+            console.log('Using fallback PDF generation...');
             
             // Create a temporary container for PDF generation
             const tempContainer = document.createElement('div');
@@ -913,81 +1100,392 @@ This markdown converter provides:
             tempContainer.style.width = '800px';
             tempContainer.style.background = 'white';
             tempContainer.style.padding = '40px';
-            tempContainer.innerHTML = preview.innerHTML;
+            tempContainer.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+            tempContainer.style.fontSize = '14px';
+            tempContainer.style.lineHeight = '1.6';
+            tempContainer.style.color = '#333';
+            tempContainer.innerHTML = createCleanHTMLForExport();
             
             document.body.appendChild(tempContainer);
             
-            // Configure PDF options
-            const opt = {
-                margin: 1,
-                filename: 'markdown-document.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true
-                },
-                jsPDF: { 
-                    unit: 'in', 
-                    format: 'letter', 
-                    orientation: 'portrait'
-                }
-            };
+            // Better PDF generation with window.print API
+            const originalContent = document.body.innerHTML;
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Markdown Document</title>
+                    <style>
+                        ${getPrintCSS()}
+                    </style>
+                </head>
+                <body>
+                    ${tempContainer.innerHTML}
+                </body>
+                </html>
+            `;
             
-            // Use html2canvas and jsPDF
-            html2canvas(tempContainer, opt.html2canvas).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jspdf.jsPDF(opt.jsPDF);
-                const imgWidth = 8.5;
-                const pageHeight = 11;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                
-                let position = 0;
-                
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-                
-                pdf.save('markdown-document.pdf');
-                document.body.removeChild(tempContainer);
-                showLoading(false);
-            }).catch(error => {
-                console.error('PDF generation error:', error);
-                alert('Error generating PDF. Please try again.');
-                document.body.removeChild(tempContainer);
-                showLoading(false);
-            });
+            // Create blob and trigger download
+            const blob = new Blob([printContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'markdown-document.html';
+            
+            // For immediate PDF, we'll use a different approach
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+                setTimeout(() => {
+                    printWindow.close();
+                    document.body.removeChild(tempContainer);
+                    showLoading(false);
+                }, 1000);
+            }, 500);
         }
 
-        // DOCX Conversion (simplified version)
+        // Enhanced DOCX Conversion with proper HTML structure
         function convertToDOCX() {
             showLoading(true);
             
-            // Create a simplified DOCX content
-            const content = preview.innerHTML;
+            try {
+                // Create clean HTML content for DOCX
+                const htmlContent = createCleanHTMLForExport();
+                
+                // Enhanced DOCX content with proper structure
+                const docxHTML = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                      xmlns:w='urn:schemas-microsoft-com:office:word' 
+                      xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>Markdown Document</title>
+                    <style>
+                        ${getDOCXCSS()}
+                    </style>
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <w:WordDocument>
+                            <w:View>Print</w:View>
+                            <w:Zoom>100</w:Zoom>
+                            <w:DoNotPromptForConvert/>
+                            <w:DoNotShowRevisions/>
+                            <w:DoNotPrintRevisions/>
+                            <w:DoNotShowMarkup/>
+                            <w:DoNotShowComments/>
+                            <w:DoNotShowInsertionsAndDeletions/>
+                            <w:DoNotShowPropertyChanges/>
+                        </w:WordDocument>
+                    </xml>
+                    <![endif]-->
+                </head>
+                <body>
+                    <div class="WordSection1">
+                        ${htmlContent}
+                    </div>
+                </body>
+                </html>
+                `;
+                
+                // Create blob with proper MIME type for DOCX
+                const blob = new Blob(['\ufeff', docxHTML], {
+                    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
+                
+                // Alternative: Create as RTF for better compatibility
+                const rtfContent = convertHTMLToRTF(htmlContent);
+                const rtfBlob = new Blob([rtfContent], {
+                    type: 'application/rtf'
+                });
+                
+                // Download RTF file (better formatting preservation)
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(rtfBlob);
+                link.download = 'markdown-document.rtf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Also provide DOCX option
+                const docxLink = document.createElement('a');
+                docxLink.href = URL.createObjectURL(blob);
+                docxLink.download = 'markdown-document.docx';
+                document.body.appendChild(docxLink);
+                docxLink.click();
+                document.body.removeChild(docxLink);
+                
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('DOCX generation error:', error);
+                // Fallback to simple HTML export
+                fallbackDOCXGeneration();
+            }
+        }
+
+        // Create clean HTML content for export
+        function createCleanHTMLForExport() {
+            // Clone the preview content
+            const content = preview.cloneNode(true);
+            
+            // Clean up any unwanted elements
+            const unwantedElements = content.querySelectorAll('button, .btn, .toolbar, .stats');
+            unwantedElements.forEach(el => el.remove());
+            
+            // Ensure proper spacing and formatting
+            content.querySelectorAll('pre code').forEach(el => {
+                el.style.whiteSpace = 'pre-wrap';
+                el.style.wordBreak = 'break-word';
+            });
+            
+            content.querySelectorAll('table').forEach(el => {
+                el.style.borderCollapse = 'collapse';
+                el.style.width = '100%';
+                el.style.margin = '16px 0';
+            });
+            
+            return content.innerHTML;
+        }
+
+        // Get CSS for print/PDF
+        function getPrintCSS() {
+            return `
+                @page {
+                    margin: 0.5in;
+                    size: A4;
+                }
+                
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+                    font-size: 11pt;
+                    line-height: 1.4;
+                    color: #333;
+                    margin: 0;
+                    padding: 20pt;
+                    background: white;
+                }
+                
+                h1 { font-size: 18pt; margin: 12pt 0 6pt 0; padding-bottom: 3pt; border-bottom: 1pt solid #eee; page-break-after: avoid; }
+                h2 { font-size: 15pt; margin: 10pt 0 5pt 0; padding-bottom: 2pt; border-bottom: 1pt solid #eee; page-break-after: avoid; }
+                h3 { font-size: 13pt; margin: 8pt 0 4pt 0; page-break-after: avoid; }
+                h4 { font-size: 11pt; margin: 6pt 0 3pt 0; font-weight: 600; page-break-after: avoid; }
+                h5 { font-size: 10pt; margin: 5pt 0 2pt 0; font-weight: 600; page-break-after: avoid; }
+                h6 { font-size: 9pt; margin: 4pt 0 2pt 0; font-weight: 600; color: #666; page-break-after: avoid; }
+                
+                p { margin: 0 0 6pt 0; orphans: 3; widows: 3; }
+                
+                ul, ol { margin: 4pt 0; padding-left: 16pt; }
+                li { margin: 1pt 0; line-height: 1.3; }
+                
+                code { 
+                    background-color: #f0f0f0; 
+                    padding: 1pt 2pt; 
+                    font-size: 9pt; 
+                    border-radius: 2pt; 
+                    font-family: Consolas, Monaco, monospace;
+                }
+                
+                pre { 
+                    background-color: #f8f8f8; 
+                    border: 1pt solid #ddd; 
+                    padding: 8pt; 
+                    margin: 6pt 0; 
+                    font-size: 9pt; 
+                    line-height: 1.3; 
+                    page-break-inside: avoid;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    font-family: Consolas, Monaco, monospace;
+                }
+                
+                pre code { 
+                    background-color: transparent; 
+                    padding: 0; 
+                    border: none;
+                }
+                
+                blockquote { 
+                    border-left: 3pt solid #ddd; 
+                    padding-left: 8pt; 
+                    margin: 6pt 0; 
+                    color: #666; 
+                    page-break-inside: avoid;
+                }
+                
+                table { 
+                    border-collapse: collapse; 
+                    width: 100%; 
+                    margin: 6pt 0; 
+                    page-break-inside: avoid;
+                }
+                
+                table th {
+                    background-color: #f5f5f5; 
+                    border: 1pt solid #ddd; 
+                    padding: 4pt 6pt; 
+                    font-weight: 600; 
+                    font-size: 10pt;
+                }
+                
+                table td {
+                    border: 1pt solid #ddd; 
+                    padding: 4pt 6pt; 
+                    font-size: 10pt;
+                }
+                
+                hr {
+                    height: 1pt; 
+                    background-color: #ddd; 
+                    border: none; 
+                    margin: 12pt 0;
+                }
+                
+                img { 
+                    max-width: 100%; 
+                    height: auto; 
+                    page-break-inside: avoid;
+                }
+                
+                a { 
+                    color: #0066cc; 
+                    text-decoration: underline;
+                }
+            `;
+        }
+
+        // Get CSS for DOCX
+        function getDOCXCSS() {
+            return `
+                body {
+                    font-family: 'Times New Roman', serif;
+                    font-size: 12pt;
+                    line-height: 1.5;
+                    color: #000;
+                    margin: 1in;
+                    background: white;
+                }
+                
+                h1 { font-size: 18pt; font-weight: bold; margin: 12pt 0 6pt 0; }
+                h2 { font-size: 16pt; font-weight: bold; margin: 10pt 0 5pt 0; }
+                h3 { font-size: 14pt; font-weight: bold; margin: 8pt 0 4pt 0; }
+                h4 { font-size: 12pt; font-weight: bold; margin: 6pt 0 3pt 0; }
+                h5 { font-size: 11pt; font-weight: bold; margin: 5pt 0 2pt 0; }
+                h6 { font-size: 10pt; font-weight: bold; margin: 4pt 0 2pt 0; }
+                
+                p { margin: 0 0 6pt 0; text-align: justify; }
+                
+                ul, ol { margin: 6pt 0; padding-left: 18pt; }
+                li { margin: 2pt 0; }
+                
+                code { 
+                    font-family: 'Courier New', monospace;
+                    background-color: #f0f0f0; 
+                    padding: 2pt; 
+                    font-size: 10pt;
+                }
+                
+                pre { 
+                    font-family: 'Courier New', monospace;
+                    background-color: #f8f8f8; 
+                    border: 1pt solid #ccc; 
+                    padding: 6pt; 
+                    margin: 6pt 0; 
+                    font-size: 10pt;
+                    white-space: pre-wrap;
+                }
+                
+                blockquote { 
+                    border-left: 3pt solid #ccc; 
+                    padding-left: 12pt; 
+                    margin: 6pt 0 6pt 12pt; 
+                    font-style: italic;
+                }
+                
+                table { 
+                    border-collapse: collapse; 
+                    width: 100%; 
+                    margin: 12pt 0;
+                }
+                
+                table th, table td {
+                    border: 1pt solid #000; 
+                    padding: 6pt; 
+                    text-align: left;
+                }
+                
+                table th {
+                    background-color: #f0f0f0; 
+                    font-weight: bold;
+                }
+                
+                hr {
+                    border: none; 
+                    border-top: 1pt solid #ccc; 
+                    margin: 12pt 0;
+                }
+                
+                a { 
+                    color: blue; 
+                    text-decoration: underline;
+                }
+            `;
+        }
+
+        // Convert HTML to RTF for better Word compatibility
+        function convertHTMLToRTF(html) {
+            // Simple HTML to RTF conversion
+            let rtf = '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}';
+            rtf += '\\f0\\fs24 '; // Set font and size
+            
+            // Replace HTML tags with RTF codes
+            html = html.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '\\fs36\\b $1\\b0\\fs24\\par\\par');
+            html = html.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '\\fs32\\b $1\\b0\\fs24\\par\\par');
+            html = html.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '\\fs28\\b $1\\b0\\fs24\\par\\par');
+            html = html.replace(/<h4[^>]*>(.*?)<\/h4>/gi, '\\fs24\\b $1\\b0\\fs24\\par\\par');
+            html = html.replace(/<h5[^>]*>(.*?)<\/h5>/gi, '\\fs22\\b $1\\b0\\fs24\\par\\par');
+            html = html.replace(/<h6[^>]*>(.*?)<\/h6>/gi, '\\fs20\\b $1\\b0\\fs24\\par\\par');
+            
+            html = html.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\\par\\par');
+            html = html.replace(/<br\s*\/?>/gi, '\\par');
+            html = html.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '\\b $1\\b0');
+            html = html.replace(/<b[^>]*>(.*?)<\/b>/gi, '\\b $1\\b0');
+            html = html.replace(/<em[^>]*>(.*?)<\/em>/gi, '\\i $1\\i0');
+            html = html.replace(/<i[^>]*>(.*?)<\/i>/gi, '\\i $1\\i0');
+            html = html.replace(/<code[^>]*>(.*?)<\/code>/gi, '\\f1 $1\\f0');
+            html = html.replace(/<pre[^>]*>(.*?)<\/pre>/gi, '\\f1\\fs20 $1\\f0\\fs24\\par');
+            
+            // Remove remaining HTML tags
+            html = html.replace(/<[^>]*>/g, '');
+            
+            // Escape special RTF characters
+            html = html.replace(/\\/g, '\\\\');
+            html = html.replace(/\{/g, '\\{');
+            html = html.replace(/\}/g, '\\}');
+            
+            rtf += html + '}';
+            return rtf;
+        }
+
+        // Fallback DOCX generation
+        function fallbackDOCXGeneration() {
+            const content = createCleanHTMLForExport();
             const textContent = preview.textContent || preview.innerText || '';
             
-            // For this demo, we'll create a simple text-based DOCX
-            // In a production environment, you'd use a proper DOCX library
             const docxContent = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head><meta charset='utf-8'><title>Markdown Document</title></head>
             <body>
-                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 20px;">
                     ${content}
                 </div>
             </body>
             </html>
             `;
             
-            // Create a blob and save as .doc
             const blob = new Blob(['\ufeff', docxContent], {
                 type: 'application/msword'
             });
